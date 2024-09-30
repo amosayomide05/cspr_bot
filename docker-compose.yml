@@ -1,0 +1,12 @@
+services:
+  bot:
+    image: cuongnv219/csprbot:v1.0
+    container_name: 'csprbot'
+    platform: linux/amd64
+    build:
+      context: .
+    stop_signal: SIGINT
+    restart: unless-stopped
+    command: "python3 main.py"
+    volumes:
+      - .:/app
