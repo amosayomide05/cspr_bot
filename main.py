@@ -91,22 +91,7 @@ class Csprbot:
         uar = UserAgent(software_names=software, operating_systems=operating, limit=100)
         ua = uar.get_random_user_agent()
         return ua
-
-    def game_data(self):
-        try:
-            while True:
-                responses = requests.post('https://app.winsnip.xyz/play', json=self.game_response).text
-                try:
-                    response = json.loads(responses)
-                except json.JSONDecodeError:
-                    continue
-                if response['message'] == 'success' and response['game']['log'] >= 100:
-                    self.game = response['game']
-                    return True
-        except Exception as e:
-            log(f"Error getting game data: {e}", level="ERROR")
-
-            
+                
     def solve_task(self):
         # try:
             res = self.session.get("https://api.cspr.community/api/users/me/tasks")
@@ -132,9 +117,24 @@ class Csprbot:
         #     log(f"Error completing tasks: {e}", level="ERROR")
 
     def solve_single_task(self, task):
+        needToClaimTask = False
         if task["claimed_at"] is not None:
-            return
+            seconds_to_claim_again = task["seconds_to_claim_again"]
+            if seconds_to_claim_again < 0:
+                needToClaimTask = False
+            else:
+                started_at_str = task["started_at"]
+                started_at_date = datetime.strptime(started_at_str, "%Y-%m-%dT%H:%M:%SZ") + timedelta(seconds=seconds_to_claim_again)
+                if datetime.now() > started_at_date:
+                    needToClaimTask = True
+                else:
+                    needToClaimTask = False
+        else:
+            needToClaimTask = True
         
+        if needToClaimTask == False:
+            return
+    
         seconds_to_allow_claim = task["seconds_to_allow_claim"]
         seconds_to_allow_claim = max(seconds_to_allow_claim, 0)
         # seconds_to_claim_again = task["seconds_to_claim_again"] TODO: tinh sau
@@ -151,7 +151,7 @@ class Csprbot:
 
         log(f"Doing task {title}, reward {rewards_point} points, catetory {catetoryType}", level="INFO")
 
-        response = requests.post(
+        response = self.session.post(
             'https://api.cspr.community/api/users/me/tasks', 
             json={
                     'task_name': task_name, 
@@ -169,7 +169,7 @@ class Csprbot:
 
             date_do_task = datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%fZ')
             
-            response = requests.post(
+            response = self.session.post(
             'https://api.cspr.community/api/users/me/tasks', 
             json={
                     'task_name': task_name, 
@@ -183,6 +183,7 @@ class Csprbot:
             if response.status_code == 200:
                 log("Claim successfully!", level="SUCCESS")
             else:
+                log(f"Claim failed! {response.content}", level="ERROR")
                 log(f"Claim failed! {response.status_code}", level="ERROR")
 
         else:
