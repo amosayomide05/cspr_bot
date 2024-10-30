@@ -61,7 +61,7 @@ class Csprbot:
             self.session.headers.update({
             'authorization': f'Bearer {self.token}'
             })
-            response = self.session.get('https://api.cspr.community/api/users/me')
+            response = self.session.get('https://api2.cspr.community/api/users/me')
             if response.status_code == 200:
                 jsonData = response.json()
                 user = jsonData["user"]
@@ -94,7 +94,7 @@ class Csprbot:
                 
     def solve_task(self):
         # try:
-            res = self.session.get("https://api.cspr.community/api/users/me/tasks")
+            res = self.session.get("https://api2.cspr.community/api/users/me/tasks")
             if not res or not res.json():
                 log(f"Failed to fetch tasks!", level="ERROR")
                 return
@@ -170,7 +170,7 @@ class Csprbot:
             date_do_task = datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%fZ')
             
             response = self.session.post(
-            'https://api.cspr.community/api/users/me/tasks', 
+            'https://api2.cspr.community/api/users/me/tasks', 
             json={
                     'task_name': task_name, 
                     'action': 1, 
